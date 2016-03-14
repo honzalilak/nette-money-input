@@ -20,6 +20,26 @@ use Tester\TestCase;
 class DateTimeInputTest extends TestCase
 {
 
+	public function testParsing()
+	{
+		$input = new MoneyInput(NULL, 'caption');
+		$input->setValue('1 234 567');
+		$this->assertMoney(Money::fromFloat(1234567), $input->getValue());
+	}
+
+
+
+	public function testNullCurrency()
+	{
+		$input = new MoneyInput(NULL, 'caption');
+		Assert::null($input->getValue());
+		$amount = Money::fromFloat(100);
+		$input->setValue($amount);
+		$this->assertMoney($amount, $input->getValue());
+	}
+
+
+
 	public function testSimple()
 	{
 		$currency = new Currency('CZK');

@@ -24,3 +24,26 @@ webloader:
 			files:
 				- %wwwDir%/../vendor/achse/nette-money-input/assets/moneyInput.js
 ```
+
+# Usage
+
+## Without currency information
+```php
+
+// In your `BaseForm` class / `FormElemetns` trait, or whatever ...
+
+/**
+ * @param string $name
+ * @param string|NULL $label
+ * @return MoneyInput
+ */
+public function addMoney($name, $label = NULL)
+{
+	return $this[$name] = new MoneyInput(NULL, $label);
+}
+
+
+// Processing
+
+$currency = $this->currencyFinder->findByCode($values->currency);
+$amount = Money::from($values->amount->toInt(), $currency);

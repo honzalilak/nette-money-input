@@ -7,6 +7,7 @@ use Kdyby\Money\Money;
 use Nette\Forms\Controls\TextInput;
 use Nette\Forms\Form;
 use Nette\InvalidArgumentException;
+use Nette\Utils\Strings;
 
 
 
@@ -21,18 +22,18 @@ class MoneyInput extends TextInput
 	const CLASS_IDENTIFIER = 'money-input';
 
 	/**
-	 * @var Currency
+	 * @var Currency|NULL
 	 */
 	private $currency;
 
 
 
 	/**
-	 * @param Currency $currency
+	 * @param Currency|NULL $currency
 	 * @param string|NULL $label
 	 * @param int $maxLength
 	 */
-	public function __construct(Currency $currency, $label = NULL, $maxLength = self::AMOUNT_LENGTH_LIMIT)
+	public function __construct(Currency $currency = NULL, $label = NULL, $maxLength = self::AMOUNT_LENGTH_LIMIT)
 	{
 		parent::__construct($label, $maxLength);
 
@@ -69,7 +70,13 @@ class MoneyInput extends TextInput
 	 */
 	public function getValue()
 	{
-		return Money::fromFloat(parent::getValue(), $this->currency);
+		if (($value = parent::getValue()) === '') {
+			return NULL;
+		}
+
+		$value = Strings::replace($value, '~\s~', '');
+
+		return Money::fromFloat($value, $this->currency);
 	}
 
 
