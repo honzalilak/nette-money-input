@@ -29,7 +29,7 @@ class DateTimeInputTest extends TestCase
 
 		$amount = Money::fromFloat(100, $currency);
 		$input->setValue($amount);
-		$this->assertMoney($amount, $input);
+		$this->assertMoney($amount, $input->getValue());
 
 		$input->setValue('');
 		Assert::equal(NULL, $input->getValue());
