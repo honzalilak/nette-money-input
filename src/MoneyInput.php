@@ -21,7 +21,7 @@ class MoneyInput extends TextInput
 	const CLASS_IDENTIFIER = 'money-input';
 
 	/**
-	 * @var Currency
+	 * @var Currency|NULL
 	 */
 	private $currency;
 
@@ -32,7 +32,7 @@ class MoneyInput extends TextInput
 	 * @param string|NULL $label
 	 * @param int $maxLength
 	 */
-	public function __construct(Currency $currency, $label = NULL, $maxLength = self::AMOUNT_LENGTH_LIMIT)
+	public function __construct(Currency $currency = NULL, $label = NULL, $maxLength = self::AMOUNT_LENGTH_LIMIT)
 	{
 		parent::__construct($label, $maxLength);
 
@@ -69,7 +69,11 @@ class MoneyInput extends TextInput
 	 */
 	public function getValue()
 	{
-		return Money::fromFloat(parent::getValue(), $this->currency);
+		if (($value = parent::getValue()) === '') {
+			return NULL;
+		}
+
+		return Money::fromFloat($value, $this->currency);
 	}
 
 
