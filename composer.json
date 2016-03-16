@@ -21,7 +21,8 @@
 		"kdyby/money": "@dev"
 	},
 	"require-dev": {
-		"nette/tester": "@dev"
+		"nette/tester": "@dev",
+		"mockery/mockery": "@dev"
 	},
 	"autoload": {
 		"psr-4": {

@@ -2,11 +2,12 @@
 
 namespace Achse\MoneyInput;
 
-use Kdyby\Money\Currency;
 use Kdyby\Money\Money;
 use Nette\Forms\Controls\TextInput;
 use Nette\Forms\Form;
+use Nette\Forms\Helpers;
 use Nette\InvalidArgumentException;
+use Nette\Utils\Html;
 use Nette\Utils\Strings;
 
 
@@ -22,61 +23,108 @@ class MoneyInput extends TextInput
 	const CLASS_IDENTIFIER = 'money-input';
 
 	/**
-	 * @var Currency|NULL
+	 * @var float|NULL
 	 */
-	private $currency;
+	private $amount;
+
+	/**
+	 * @var string|NULL
+	 */
+	private $currencyCode;
+
+	/**
+	 * @var ICurrencyFinder
+	 */
+	private $currencyFinder;
+
+	/**
+	 * @var string[]
+	 */
+	private $currencyCodeOptions;
 
 
 
 	/**
-	 * @param Currency|NULL $currency
 	 * @param string|NULL $label
 	 * @param int $maxLength
+	 * @param array $currencyCodeOptions
+	 * @param ICurrencyFinder $currencyFinder
 	 */
-	public function __construct(Currency $currency = NULL, $label = NULL, $maxLength = self::AMOUNT_LENGTH_LIMIT)
-	{
+	public function __construct(
+		$label = NULL,
+		$maxLength = self::AMOUNT_LENGTH_LIMIT,
+		array $currencyCodeOptions,
+		ICurrencyFinder $currencyFinder
+	) {
 		parent::__construct($label, $maxLength);
 
-		$this->currency = $currency;
+		$this->currencyFinder = $currencyFinder;
+		$this->currencyCodeOptions = $currencyCodeOptions;
 
 		$this->addCondition(Form::FILLED)
 			->addRule(Form::PATTERN, 'moneyInput.error.notANumber', '[0-9 ]+')
 			->addRule(Form::MAX_LENGTH, 'moneyInput.error.numberTooBig', self::AMOUNT_LENGTH_LIMIT);
+	}
 
-		$this->setAttribute('class', self::CLASS_IDENTIFIER);
+
+
+	public function loadHttpData()
+	{
+		$rawAmount = $this->getHttpData(Form::DATA_LINE, '[amount]');
+		$this->amount = Strings::replace($rawAmount, '~\s~', '');
+		$this->currencyCode = $this->getHttpData(Form::DATA_LINE, '[currencyCode]');
 	}
 
 
 
 	/**
-	 * @param \DateTime|string $value
+	 * @inheritdoc
+	 */
+	public function getControl()
+	{
+		$name = $this->getHtmlName();
+
+		return Html::el()
+			->add(Html::el('input')
+				->name($name . '[amount]')
+				->id($this->getHtmlId())
+				->value($this->amount)
+				->class(self::CLASS_IDENTIFIER)
+			)
+			->add(Helpers::createSelectBox($this->currencyCodeOptions, ['selected?' => $this->currencyCode])
+				->name($name . '[currencyCode]'));
+	}
+
+
+
+	/**
+	 * @param Money|string $value
 	 * @return static
 	 */
 	public function setValue($value)
 	{
 		if ($value instanceof Money) {
-			$value = $value->toFloat();
+			$this->currencyCode = $value->getCurrency()->getCode();
+			$this->amount = $value->toFloat();
+		} else {
+			$this->amount = NULL;
+			$this->currencyCode = NULL;
 		}
-
-		$this->rawValue = $value;
-
-		return parent::setValue($value);
 	}
 
 
 
 	/**
 	 * @return Money|NULL
+	 * @throws CurrencyNotFoundException
 	 */
 	public function getValue()
 	{
-		if (($value = parent::getValue()) === '') {
+		if ($this->amount === NULL || $this->currencyCode === NULL) {
 			return NULL;
 		}
 
-		$value = Strings::replace($value, '~\s~', '');
-
-		return Money::fromFloat($value, $this->currency);
+		return Money::fromFloat($this->amount, $this->currencyFinder->findByCode($this->currencyCode));
 	}
 
 

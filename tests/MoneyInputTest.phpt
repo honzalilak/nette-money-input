@@ -8,9 +8,12 @@ namespace Achse\MoneyInput\Tests;
 
 require __DIR__ . '/bootstrap.php';
 
+use Achse\MoneyInput\ICurrencyFinder;
 use Achse\MoneyInput\MoneyInput;
 use Kdyby\Money\Currency;
 use Kdyby\Money\Money;
+use Mockery;
+use Mockery\MockInterface;
 use Nette\InvalidArgumentException;
 use Tester\Assert;
 use Tester\TestCase;
@@ -20,34 +23,17 @@ use Tester\TestCase;
 class DateTimeInputTest extends TestCase
 {
 
-	public function testParsing()
-	{
-		$input = new MoneyInput(NULL, 'caption');
-		$input->setValue('1 234 567');
-		$this->assertMoney(Money::fromFloat(1234567), $input->getValue());
-	}
-
-
-
-	public function testNullCurrency()
-	{
-		$input = new MoneyInput(NULL, 'caption');
-		Assert::null($input->getValue());
-		$amount = Money::fromFloat(100);
-		$input->setValue($amount);
-		$this->assertMoney($amount, $input->getValue());
-	}
+	const DUMMY_CURRENCY_OPTIONS = ['CZK' => 'CZK'];
 
 
 
 	public function testSimple()
 	{
-		$currency = new Currency('CZK');
+		$input = $this->moneyInputBuilder();
 
-		$input = new MoneyInput($currency, 'caption');
 		Assert::null($input->getValue());
 
-		$amount = Money::fromFloat(100, $currency);
+		$amount = Money::fromFloat(100, Currency::get('CZK'));
 		$input->setValue($amount);
 		$this->assertMoney($amount, $input->getValue());
 
@@ -64,7 +50,7 @@ class DateTimeInputTest extends TestCase
 	{
 		$currency = new Currency('CZK');
 
-		$input = new MoneyInput($currency, 'caption');
+		$input = $this->moneyInputBuilder();
 
 		Assert::exception(
 			function () use ($input) {
@@ -75,7 +61,7 @@ class DateTimeInputTest extends TestCase
 		);
 
 		$amount = Money::fromFloat(100, $currency);
-		$input = new MoneyInput($currency, 'caption');
+		$input = $this->moneyInputBuilder();
 		$input->setDefaultValue($amount);
 
 		Assert::notSame($currency, $input->getValue());
@@ -92,6 +78,38 @@ class DateTimeInputTest extends TestCase
 	{
 		Assert::equal($expected->toFloat(), $given->toFloat());
 		Assert::equal($expected->getCurrency()->getCode(), $given->getCurrency()->getCode());
+	}
+
+
+
+	/**
+	 * @return ICurrencyFinder|MockInterface
+	 */
+	private function mockCurrencyFinder()
+	{
+		return Mockery::mock(ICurrencyFinder::class)
+			->shouldReceive('findByCode')->andReturnUsing(
+				function ($code) {
+					return Currency::get($code);
+				}
+			)->getMock();
+	}
+
+
+
+	/**
+	 * @return MoneyInput
+	 */
+	public function moneyInputBuilder()
+	{
+		$input = new MoneyInput(
+			'caption',
+			MoneyInput::AMOUNT_LENGTH_LIMIT,
+			self::DUMMY_CURRENCY_OPTIONS,
+			$this->mockCurrencyFinder()
+		);
+
+		return $input;
 	}
 
 }
