@@ -27,6 +27,9 @@
 	"autoload": {
 		"psr-4": {
 			"Achse\\MoneyInput\\": "src/"
-		}
+		},
+		"classmap": [
+			"src/exceptions.php"
+		]
 	}
 }
