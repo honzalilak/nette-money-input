@@ -6,9 +6,11 @@ use Kdyby\Money\Money;
 use Nette\Forms\Controls\TextInput;
 use Nette\Forms\Form;
 use Nette\Forms\Helpers;
+use Nette\Forms\IControl;
 use Nette\InvalidArgumentException;
 use Nette\Utils\Html;
 use Nette\Utils\Strings;
+use Nette\Utils\Validators;
 
 
 
@@ -23,14 +25,14 @@ class MoneyInput extends TextInput
 	const CLASS_IDENTIFIER = 'money-input';
 
 	/**
-	 * @var float|NULL
+	 * @var string
 	 */
-	private $amount;
+	private $rawAmount = '';
 
 	/**
-	 * @var string|NULL
+	 * @var string
 	 */
-	private $currencyCode;
+	private $rawCurrencyCode = '';
 
 	/**
 	 * @var ICurrencyFinder
@@ -61,9 +63,7 @@ class MoneyInput extends TextInput
 		$this->currencyFinder = $currencyFinder;
 		$this->currencyCodeOptions = $currencyCodeOptions;
 
-		$this->addCondition(Form::FILLED)
-			->addRule(Form::PATTERN, 'moneyInput.error.notANumber', '[0-9 ]+')
-			->addRule(Form::MAX_LENGTH, 'moneyInput.error.numberTooBig', self::AMOUNT_LENGTH_LIMIT);
+		$this->addRule(Form::VALID, 'moneyInput.error.notANumber');
 	}
 
 
@@ -71,8 +71,9 @@ class MoneyInput extends TextInput
 	public function loadHttpData()
 	{
 		$rawAmount = $this->getHttpData(Form::DATA_LINE, '[amount]');
-		$this->amount = (float) Strings::replace($rawAmount, '~\s~', '');
-		$this->currencyCode = $this->getHttpData(Form::DATA_LINE, '[currencyCode]');
+		$this->rawAmount = Strings::replace($rawAmount, '~\s~', '');
+		$rawCurrencyCode = $this->getHttpData(Form::DATA_LINE, '[currencyCode]');
+		$this->rawCurrencyCode = Strings::replace($rawCurrencyCode, '~\s~', '');
 	}
 
 
@@ -88,10 +89,10 @@ class MoneyInput extends TextInput
 			->add(Html::el('input')
 				->name($name . '[amount]')
 				->id($this->getHtmlId())
-				->value($this->amount)
+				->value($this->rawAmount)
 				->class(self::CLASS_IDENTIFIER)
 			)
-			->add(Helpers::createSelectBox($this->currencyCodeOptions, ['selected?' => $this->currencyCode])
+			->add(Helpers::createSelectBox($this->currencyCodeOptions, ['selected?' => $this->rawCurrencyCode])
 				->name($name . '[currencyCode]'));
 	}
 
@@ -102,12 +103,7 @@ class MoneyInput extends TextInput
 	 */
 	public function isFilled()
 	{
-		return (
-			$this->amount !== NULL
-			&& $this->amount != 0 // intentionally loose comparison (int vs. float: 0 !== 0.0)
-			&& $this->currencyCode !== NULL
-			&& $this->currencyCode !== ''
-		);
+		return !$this->isEmpty();
 	}
 
 
@@ -119,11 +115,11 @@ class MoneyInput extends TextInput
 	public function setValue($value)
 	{
 		if ($value instanceof Money) {
-			$this->currencyCode = $value->getCurrency()->getCode();
-			$this->amount = $value->toFloat();
+			$this->rawCurrencyCode = $value->getCurrency()->getCode();
+			$this->rawAmount = (string) $value->toFloat();
 		} else {
-			$this->amount = NULL;
-			$this->currencyCode = NULL;
+			$this->rawAmount = '';
+			$this->rawCurrencyCode = '';
 		}
 	}
 
@@ -135,11 +131,15 @@ class MoneyInput extends TextInput
 	 */
 	public function getValue()
 	{
-		if ($this->amount === NULL || $this->currencyCode === NULL) {
+		/** @var float|NULL $amount */
+		/** @var string|NULL $currencyCode */
+		list ($amount, $currencyCode) = $this->parseRawData();
+
+		if ($amount === NULL || $currencyCode === NULL) {
 			return NULL;
 		}
 
-		return Money::fromFloat($this->amount, $this->currencyFinder->findByCode($this->currencyCode));
+		return Money::fromFloat($amount, $this->currencyFinder->findByCode($currencyCode));
 	}
 
 
@@ -159,6 +159,123 @@ class MoneyInput extends TextInput
 		}
 
 		return parent::setDefaultValue($value);
+	}
+
+
+
+	/**
+	 * @return bool
+	 */
+	public function isEmpty()
+	{
+		/** @var float|NULL $amount */
+		/** @var string|NULL $currencyCode */
+		list ($amount, $currencyCode) = $this->parseRawData();
+
+		return (
+			$amount === NULL
+			|| $currencyCode === NULL
+			|| $this->rawAmount == 0 // intentionally loose comparison (int vs. float: 0 !== 0.0)
+		);
+	}
+
+
+
+	/**
+	 * @return bool
+	 */
+	public function isValid()
+	{
+		return Validators::isNumeric($this->rawAmount);
+	}
+
+
+
+	/**
+	 * @inheritdoc
+	 */
+	public function setRequired($value = TRUE)
+	{
+		if ($value) {
+			$this->addRule(Form::REQUIRED, is_string($value) ? $value : NULL);
+		} else {
+			$this->getRules()->setRequired(FALSE);
+		}
+
+		return $this;
+	}
+
+
+
+	/**
+	 * @inheritdoc
+	 */
+	public function addRule($operation, $message = NULL, $arg = NULL)
+	{
+		if ($operation === Form::FILLED || $operation === Form::REQUIRED) {
+			$operation = __CLASS__ . '::validateMoneyInputFilled';
+
+		} elseif ($operation === Form::VALID) {
+			$operation = __CLASS__ . '::validateMoneyInputValid';
+		}
+
+		return parent::addRule($operation, $message, $arg);
+	}
+
+
+
+	/**
+	 * @param IControl $control
+	 * @return bool
+	 */
+	public static function validateMoneyInputValid(IControl $control)
+	{
+		/** @var static $control */
+		self::validateControlType($control);
+
+		return $control->isEmpty() || $control->isValid();
+	}
+
+
+
+	/**
+	 * @param IControl $control
+	 * @return bool
+	 */
+	public static function validateMoneyInputFilled(IControl $control)
+	{
+		/** @var static $control */
+		self::validateControlType($control);
+
+		return !$control->isEmpty();
+	}
+
+
+
+	/**
+	 * @param IControl $control
+	 */
+	private static function validateControlType(IControl $control)
+	{
+		if (!$control instanceof static) {
+			throw new InvalidArgumentException(
+				"Given control object must be instance of '" . get_class()
+				. "', but '" . get_class($control) . "' given."
+			);
+		}
+	}
+
+
+
+	/**
+	 * @return float[]|string[]|NULL[]
+	 */
+	private function parseRawData()
+	{
+		$amount = $this->rawAmount !== '' ? (float) $this->rawAmount : NULL;
+		$currencyCode = $this->rawCurrencyCode !== '' ? $this->rawCurrencyCode : NULL;
+
+		return [$amount, $currencyCode];
 	}
 
 }
