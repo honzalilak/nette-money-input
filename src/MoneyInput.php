@@ -71,7 +71,7 @@ class MoneyInput extends TextInput
 	public function loadHttpData()
 	{
 		$rawAmount = $this->getHttpData(Form::DATA_LINE, '[amount]');
-		$this->amount = Strings::replace($rawAmount, '~\s~', '');
+		$this->amount = (float) Strings::replace($rawAmount, '~\s~', '');
 		$this->currencyCode = $this->getHttpData(Form::DATA_LINE, '[currencyCode]');
 	}
 
