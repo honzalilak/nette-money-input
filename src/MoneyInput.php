@@ -6,7 +6,6 @@ use Kdyby\Money\Money;
 use Nette\Forms\Controls\TextInput;
 use Nette\Forms\Form;
 use Nette\Forms\Helpers;
-use Nette\Forms\IControl;
 use Nette\InvalidArgumentException;
 use Nette\Utils\Html;
 use Nette\Utils\Strings;
@@ -220,90 +219,16 @@ class MoneyInput extends TextInput
 	public function addRule($operation, $message = NULL, $arg = NULL)
 	{
 		if ($operation === Form::FILLED || $operation === Form::REQUIRED) {
-			$operation = __CLASS__ . '::validateMoneyInputFilled';
+			$operation = MoneyInputValidators::class . '::validateMoneyInputFilled';
 
 		} elseif ($operation === Form::VALID) {
-			$operation = __CLASS__ . '::validateMoneyInputValid';
+			$operation = MoneyInputValidators::class . '::validateMoneyInputValid';
 
 		} elseif ($operation === Form::RANGE) {
-			$operation = __CLASS__ . '::validateMoneyInputRange';
+			$operation = MoneyInputValidators::class . '::validateMoneyInputRange';
 		}
 
 		return parent::addRule($operation, $message, $arg);
-	}
-
-
-
-	/**
-	 * @param IControl $control
-	 * @return bool
-	 */
-	public static function validateMoneyInputValid(IControl $control)
-	{
-		/** @var static $control */
-		self::validateControlType($control);
-
-		return $control->isEmpty() || $control->isValid();
-	}
-
-
-
-	/**
-	 * @param IControl $control
-	 * @return bool
-	 */
-	public static function validateMoneyInputFilled(IControl $control)
-	{
-		/** @var static $control */
-		self::validateControlType($control);
-
-		return !$control->isEmpty();
-	}
-
-
-
-	/**
-	 * @param IControl $control
-	 * @param float[]|NULL[] $args
-	 * @return bool
-	 */
-	public static function validateMoneyInputRange(IControl $control, array $args)
-	{
-		/** @var static $control */
-		self::validateControlType($control);
-
-		/** @var Money $value */
-		$value = $control->getValue();
-		if ($value === NULL) {
-			$value = Money::from(0);
-		}
-
-		if (count($args) !== 2) {
-			throw new InvalidArgumentException('You have to provide exactly two values.');
-		}
-
-		$left = $args[0] !== NULL ? Money::fromFloat($args[0], $value->getCurrency()) : NULL;
-		$right = $args[1] !== NULL ? Money::fromFloat($args[1], $value->getCurrency()) : NULL;
-
-		return (
-			($left === NULL || $left->lessOrEquals($value))
-			&& ($right === NULL || $right->largerOrEquals($value))
-		);
-	}
-
-
-
-	/**
-	 * @param IControl $control
-	 */
-	private static function validateControlType(IControl $control)
-	{
-		if (!$control instanceof static) {
-			throw new InvalidArgumentException(
-				"Given control object must be instance of '" . get_class()
-				. "', but '" . get_class($control) . "' given."
-			);
-		}
 	}
 
 

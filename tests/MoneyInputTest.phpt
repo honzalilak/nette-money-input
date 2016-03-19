@@ -10,6 +10,7 @@ require __DIR__ . '/bootstrap.php';
 
 use Achse\MoneyInput\ICurrencyFinder;
 use Achse\MoneyInput\MoneyInput;
+use Achse\MoneyInput\MoneyInputValidators;
 use Kdyby\Money\Currency;
 use Kdyby\Money\Money;
 use Mockery;
@@ -265,15 +266,15 @@ class MoneyInputTest extends TestCase
 		$control = Mockery::mock(IControl::class);
 
 		Assert::exception(function () use ($control) {
-			MoneyInput::validateMoneyInputFilled($control);
+			MoneyInputValidators::validateMoneyInputFilled($control);
 		}, InvalidArgumentException::class);
 
 		Assert::exception(function () use ($control) {
-			MoneyInput::validateMoneyInputValid($control);
+			MoneyInputValidators::validateMoneyInputValid($control);
 		}, InvalidArgumentException::class);
 
 		Assert::exception(function () use ($control) {
-			MoneyInput::validateMoneyInputRange($control, []);
+			MoneyInputValidators::validateMoneyInputRange($control, []);
 		}, InvalidArgumentException::class);
 	}
 
