@@ -10,3 +10,10 @@ class CurrencyNotFoundException extends Exception
 {
 
 }
+
+
+
+class ValueParseException extends Exception
+{
+
+}

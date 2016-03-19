@@ -168,9 +168,16 @@ class MoneyInput extends TextInput
 	 */
 	public function isEmpty()
 	{
-		/** @var float|NULL $amount */
-		/** @var string|NULL $currencyCode */
-		list ($amount, $currencyCode) = $this->parseRawData();
+		try {
+			/** @var float|NULL $amount */
+			/** @var string|NULL $currencyCode */
+			list ($amount, $currencyCode) = $this->parseRawData();
+
+		} catch (ValueParseException $e) {
+			// If parsing failed, there is definitely something inside
+
+			return FALSE;
+		}
 
 		return (
 			$amount === NULL
@@ -268,11 +275,21 @@ class MoneyInput extends TextInput
 
 
 	/**
-	 * @return float[]|string[]|NULL[]
+	 * @return float[]|NULL[]|string[]
+	 * @throws ValueParseException
 	 */
 	private function parseRawData()
 	{
-		$amount = $this->rawAmount !== '' ? (float) $this->rawAmount : NULL;
+		if ($this->rawAmount !== '') {
+			if (!Validators::isNumeric($this->rawAmount)) {
+				throw new ValueParseException();
+			}
+
+			$amount = (float) $this->rawAmount;
+		} else {
+			$amount = NULL;
+		}
+
 		$currencyCode = $this->rawCurrencyCode !== '' ? $this->rawCurrencyCode : NULL;
 
 		return [$amount, $currencyCode];

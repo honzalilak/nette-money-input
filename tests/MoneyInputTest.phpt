@@ -15,6 +15,7 @@ use Kdyby\Money\Money;
 use Mockery;
 use Mockery\MockInterface;
 use Nette\Forms\Form;
+use Nette\Forms\IControl;
 use Nette\InvalidArgumentException;
 use ReflectionObject;
 use Tester\Assert;
@@ -42,6 +43,40 @@ class MoneyInputTest extends TestCase
 			. '<select name="money[currencyCode]"><option value="CZK">CZK</option></select>';
 
 		Assert::equal($expected, (string) $input->getControl());
+	}
+
+
+
+	/**
+	 * @dataProvider getDataForIsEmpty
+	 *
+	 * @param bool $expected
+	 * @param string $rawAmount
+	 * @param string $rawCurrency
+	 */
+	public function testIsEmpty($expected, $rawAmount, $rawCurrency)
+	{
+		$input = $this->getInputWithMockedUserInput($rawAmount, $rawCurrency);
+		$input->loadHttpData();
+
+		Assert::equal($expected, $input->isEmpty());
+	}
+
+
+
+	/**
+	 * @return array
+	 */
+	public function getDataForIsEmpty()
+	{
+		return [
+			[TRUE, '', ''],
+			[TRUE, '0', 'CZK'],
+			[TRUE, '100', ''],
+
+			[FALSE, '100', 'CZK'],
+			[FALSE, 'Trololoooo-oo-o-ooo', 'CZK'],
+		];
 	}
 
 
@@ -181,11 +216,27 @@ class MoneyInputTest extends TestCase
 
 
 
+	public function testTypeValidation()
+	{
+		/** @var IControl|MockInterface $control */
+		$control = Mockery::mock(IControl::class);
+
+		Assert::exception(function () use ($control) {
+			MoneyInput::validateMoneyInputFilled($control);
+		}, InvalidArgumentException::class);
+
+		Assert::exception(function () use ($control) {
+			MoneyInput::validateMoneyInputValid($control);
+		}, InvalidArgumentException::class);
+	}
+
+
+
 	/**
 	 * @param Money $expected
 	 * @param Money $given
 	 */
-	public function assertMoney(Money $expected, Money $given)
+	private function assertMoney(Money $expected, Money $given)
 	{
 		Assert::equal($expected->toFloat(), $given->toFloat());
 		Assert::equal($expected->getCurrency()->getCode(), $given->getCurrency()->getCode());
@@ -230,7 +281,7 @@ class MoneyInputTest extends TestCase
 	 * @param string $propertyName
 	 * @return mixed
 	 */
-	public function getInnerInputValue(MoneyInput $input, $propertyName)
+	private function getInnerInputValue(MoneyInput $input, $propertyName)
 	{
 		$reflection = new ReflectionObject($input);
 		$property = $reflection->getProperty($propertyName);
@@ -246,7 +297,7 @@ class MoneyInputTest extends TestCase
 	 * @param string $rawCurrency
 	 * @return MoneyInput
 	 */
-	public function getInputWithMockedUserInput($rawAmount, $rawCurrency)
+	private function getInputWithMockedUserInput($rawAmount, $rawCurrency)
 	{
 		/** @var Form|MockInterface $form */
 		$form = Mockery::mock(new Form());
