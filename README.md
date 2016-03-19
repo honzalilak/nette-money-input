@@ -28,22 +28,47 @@ webloader:
 # Usage
 
 ## Without currency information
+
+You need to implement your `ICurrencyFinder` to transform Currency-Code string to object.
 ```php
+class CurrencyFinder extends Object implements ICurrencyFinder
+{
+	private $currencyRepository;
 
-// In your `BaseForm` class / `FormElemetns` trait, or whatever ...
+	public function __construct(EntityManager $entityManager)
+	{
+		$this->currencyRepository = $entityManager->getRepository(Currency::class);
+	}
 
+	/**
+	 * @inheritdoc
+	 */
+	public function findByCode($code)
+	{
+		/** @var Currency $currency */
+		$currency = $this->currencyRepository->findOneBy(['code' => $code]);
+		if ($currency === NULL) {
+			throw new CurrencyNotFoundException("Currency '{$code}' not found.");
+		}
+
+		return $currency;
+	}
+}
+```
+
+And then define `addMoney` method in you whatever `Form` class / trait.
+```php
 /**
  * @param string $name
  * @param string|NULL $label
+ * @param array $currencyCodeOptions
+ * @param ICurrencyFinder $currencyFinder
  * @return MoneyInput
  */
-public function addMoney($name, $label = NULL)
+public function addMoney($name, $label = NULL, array $currencyCodeOptions, ICurrencyFinder $currencyFinder)
 {
-	return $this[$name] = new MoneyInput(NULL, $label);
+	$input = new MoneyInput($label, MoneyInput::AMOUNT_LENGTH_LIMIT, $currencyCodeOptions, $currencyFinder);
+
+	return $this[$name] = $input;
 }
-
-
-// Processing
-
-$currency = $this->currencyFinder->findByCode($values->currency);
-$amount = Money::from($values->amount->toInt(), $currency);
+```
