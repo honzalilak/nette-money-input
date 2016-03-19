@@ -145,6 +145,49 @@ class MoneyInputTest extends TestCase
 
 
 	/**
+	 * @dataProvider getDataForValidateRange
+	 *
+	 * @param bool $expectedHasErrors
+	 * @param string $rawAmount
+	 * @param string $rawCurrency
+	 * @param float|NULL $left
+	 * @param float|NULL $right
+	 */
+	public function testValidateRange($expectedHasErrors, $rawAmount, $rawCurrency, $left, $right)
+	{
+		$input = $this->getInputWithMockedUserInput($rawAmount, $rawCurrency);
+
+		$input->addRule(Form::RANGE, 'bla-bla', [$left, $right]);
+		$input->loadHttpData();
+		$input->validate();
+
+		Assert::equal($expectedHasErrors, $input->hasErrors());
+	}
+
+
+
+	/**
+	 * @return array
+	 */
+	public function getDataForValidateRange()
+	{
+		return [
+			[self::NO_ERRORS, '', '', NULL, NULL],
+			[self::NO_ERRORS, '', '', 0, 0],
+
+			[self::HAS_ERRORS, '', '', -5, -10],
+			[self::HAS_ERRORS, '', '', 5, 10],
+
+			[self::NO_ERRORS, '100', 'CZK', NULL, NULL],
+			[self::NO_ERRORS, '0', 'CZK', 0, 0],
+			[self::NO_ERRORS, '100', 'CZK', 0, NULL],
+			[self::NO_ERRORS, '-100', 'CZK', NULL, 0],
+		];
+	}
+
+
+
+	/**
 	 * @return array
 	 */
 	public function getDataForTestLoadHttpData()
@@ -227,6 +270,10 @@ class MoneyInputTest extends TestCase
 
 		Assert::exception(function () use ($control) {
 			MoneyInput::validateMoneyInputValid($control);
+		}, InvalidArgumentException::class);
+
+		Assert::exception(function () use ($control) {
+			MoneyInput::validateMoneyInputRange($control, []);
 		}, InvalidArgumentException::class);
 	}
 

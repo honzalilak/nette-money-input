@@ -224,6 +224,9 @@ class MoneyInput extends TextInput
 
 		} elseif ($operation === Form::VALID) {
 			$operation = __CLASS__ . '::validateMoneyInputValid';
+
+		} elseif ($operation === Form::RANGE) {
+			$operation = __CLASS__ . '::validateMoneyInputRange';
 		}
 
 		return parent::addRule($operation, $message, $arg);
@@ -255,6 +258,37 @@ class MoneyInput extends TextInput
 		self::validateControlType($control);
 
 		return !$control->isEmpty();
+	}
+
+
+
+	/**
+	 * @param IControl $control
+	 * @param float[]|NULL[] $args
+	 * @return bool
+	 */
+	public static function validateMoneyInputRange(IControl $control, array $args)
+	{
+		/** @var static $control */
+		self::validateControlType($control);
+
+		/** @var Money $value */
+		$value = $control->getValue();
+		if ($value === NULL) {
+			$value = Money::from(0);
+		}
+
+		if (count($args) !== 2) {
+			throw new InvalidArgumentException('You have to provide exactly two values.');
+		}
+
+		$left = $args[0] !== NULL ? Money::fromFloat($args[0], $value->getCurrency()) : NULL;
+		$right = $args[1] !== NULL ? Money::fromFloat($args[1], $value->getCurrency()) : NULL;
+
+		return (
+			($left === NULL || $left->lessOrEquals($value))
+			&& ($right === NULL || $right->largerOrEquals($value))
+		);
 	}
 
 
