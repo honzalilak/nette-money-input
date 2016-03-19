@@ -27,10 +27,23 @@ class DateTimeInputTest extends TestCase
 
 
 
+	public function testIsFilled()
+	{
+		$input = $this->moneyInputBuilder();
+		Assert::false($input->isFilled());
+		$input->setValue('');
+		Assert::false($input->isFilled());
+
+		$amount = Money::fromFloat(100, Currency::get('CZK'));
+		$input->setDefaultValue($amount);
+		Assert::true($input->isFilled());
+	}
+
+
+
 	public function testSimple()
 	{
 		$input = $this->moneyInputBuilder();
-
 		Assert::null($input->getValue());
 
 		$amount = Money::fromFloat(100, Currency::get('CZK'));

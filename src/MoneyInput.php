@@ -98,6 +98,21 @@ class MoneyInput extends TextInput
 
 
 	/**
+	 * @inheritdoc
+	 */
+	public function isFilled()
+	{
+		return (
+			$this->amount !== NULL
+			&& $this->amount !== 0
+			&& $this->currencyCode !== NULL
+			&& $this->currencyCode !== ''
+		);
+	}
+
+
+
+	/**
 	 * @param Money|string $value
 	 * @return static
 	 */
