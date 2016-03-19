@@ -104,7 +104,7 @@ class MoneyInput extends TextInput
 	{
 		return (
 			$this->amount !== NULL
-			&& $this->amount !== 0
+			&& $this->amount != 0 // intentionally loose comparison (int vs. float: 0 !== 0.0)
 			&& $this->currencyCode !== NULL
 			&& $this->currencyCode !== ''
 		);
