@@ -4,6 +4,8 @@
 ![](https://scrutinizer-ci.com/g/Achse/nette-money-input/badges/quality-score.png?b=master)
 ![](https://scrutinizer-ci.com/g/Achse/nette-money-input/badges/coverage.png?b=master)
 
+![](https://raw.githubusercontent.com/Achse/nette-money-input/master/examples/preview.png)
+
 # Disclaimer
 As support for multi-control inputs in Nette is not really rich, this component have some limitations:
 * There is hardcoded rendering for Bootstrap3, you are not force to use it, but the structure of elements and classes attached to it are hardcoded. If you want to use your own "skin" you can use:
