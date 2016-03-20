@@ -23,6 +23,13 @@ class MoneyInput extends TextInput
 
 	const CLASS_IDENTIFIER = 'money-input';
 
+	const RULES_MAP = [
+		Form::FILLED => MoneyInputValidators::class . '::validateMoneyInputFilled',
+		Form::REQUIRED => MoneyInputValidators::class . '::validateMoneyInputFilled',
+		Form::VALID => MoneyInputValidators::class . '::validateMoneyInputValid',
+		Form::RANGE => MoneyInputValidators::class . '::validateMoneyInputRange',
+	];
+
 	/**
 	 * @var string
 	 */
@@ -218,14 +225,8 @@ class MoneyInput extends TextInput
 	 */
 	public function addRule($operation, $message = NULL, $arg = NULL)
 	{
-		if ($operation === Form::FILLED || $operation === Form::REQUIRED) {
-			$operation = MoneyInputValidators::class . '::validateMoneyInputFilled';
-
-		} elseif ($operation === Form::VALID) {
-			$operation = MoneyInputValidators::class . '::validateMoneyInputValid';
-
-		} elseif ($operation === Form::RANGE) {
-			$operation = MoneyInputValidators::class . '::validateMoneyInputRange';
+		if (array_key_exists($operation, self::RULES_MAP)) {
+			$operation = self::RULES_MAP[$operation];
 		}
 
 		return parent::addRule($operation, $message, $arg);
