@@ -105,13 +105,18 @@ class MoneyInput extends TextInput
 			->name($name . '[amount]')
 			->id($this->getHtmlId())
 			->value($this->rawAmount)
-			->class(self::CLASS_IDENTIFIER);
+			->class(self::CLASS_IDENTIFIER . ' form-control');
 
 		$currencyControl->name($name . '[currencyCode]');
 
-		return Html::el()
-			->add($amountControl)
-			->add($currencyControl);
+		return Html::el('div')
+			->add(
+				Html::el('div')->add($amountControl)->class('col-sm-9')
+			)
+			->add(
+				Html::el('div')->add($currencyControl)->class('col-sm-3')
+			)
+			->class('row');
 	}
 
 
