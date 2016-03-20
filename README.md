@@ -4,6 +4,15 @@
 ![](https://scrutinizer-ci.com/g/Achse/nette-money-input/badges/quality-score.png?b=master)
 ![](https://scrutinizer-ci.com/g/Achse/nette-money-input/badges/coverage.png?b=master)
 
+# Disclaimer
+As support for multi-control inputs in Nette is not really rich, this component have some limitations:
+* There is hardcoded rendering for Bootstrap3, you are not force to use it, but the structure of elements and classes attached to it are hardcoded. If you wand to use your own "skin" you can use:
+ * Methods `getAmountControlPrototype()` and `getCurrencyControlPrototype()` to reach input and select elements.
+ * CSS classes `moneyInputControlContainer`, `moneyInputAmountContainer` and `moneyInputCurrencyContainer` to adjust placement of inputs.
+* There is also limitation in `addRule()` there is support for:
+ * `Form::FILLED` and `Form::REQUIRED` - You can also use `setRequired()`.
+ * and `Form::RANGE` - But there is no support for currencies. Its recommended to use it for positive / negative limitation only.
+
 # Installation
 
 ## Composer:

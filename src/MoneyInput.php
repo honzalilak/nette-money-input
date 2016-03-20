@@ -126,16 +126,6 @@ class MoneyInput extends TextInput
 	/**
 	 * @inheritdoc
 	 */
-	public function getControlPrototype()
-	{
-		return $this->amountControl;
-	}
-
-
-
-	/**
-	 * @inheritdoc
-	 */
 	public function isFilled()
 	{
 		return !$this->isEmpty();
