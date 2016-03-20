@@ -231,20 +231,41 @@ class MoneyInputTest extends TestCase
 
 
 
-	public function testGetValues()
+	/**
+	 * @dataProvider getDataForGetValues
+	 *
+	 * @param float|NULL $expectedAmount
+	 * @param string|NULL $expectedCurrency
+	 * @param string $rawAmount
+	 * @param string $rawCurrency
+	 */
+	public function testGetValues($expectedAmount, $expectedCurrency, $rawAmount, $rawCurrency)
 	{
-		$input = $this->moneyInputBuilder();
-		Assert::null($input->getValue());
+		$input = $this->getInputWithMockedUserInput($rawAmount, $rawCurrency);
+		$input->loadHttpData();
+		$result = $input->getValue();
 
-		$amount = Money::fromFloat(100, Currency::get('CZK'));
-		$input->setValue($amount);
-		$this->assertMoney($amount, $input->getValue());
+		if ($expectedAmount === NULL || $expectedCurrency === NULL) {
+			Assert::null($result);
+		} else {
+			$this->assertMoney(Money::fromFloat($expectedAmount, Currency::get($expectedCurrency)), $result);
+		}
+	}
 
-		$input->setValue('');
-		Assert::equal(NULL, $input->getValue());
 
-		$input->setValue(NULL);
-		Assert::equal(NULL, $input->getValue());
+
+	/**
+	 * @return array
+	 */
+	public function getDataForGetValues()
+	{
+		return [
+			[100000000, 'CZK', '100 000 000', 'CZK'],
+			[0, 'CZK', '0', 'CZK'],
+
+			[NULL, NULL, '', 'CZK'],
+			[NULL, NULL, ' - - - ', '  oi! '],
+		];
 	}
 
 

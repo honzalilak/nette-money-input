@@ -155,15 +155,18 @@ class MoneyInput extends TextInput
 
 	/**
 	 * @return Money|NULL
-	 * @throws CurrencyNotFoundException
 	 */
 	public function getValue()
 	{
-		/** @var float|NULL $amount */
-		/** @var string|NULL $currencyCode */
-		list ($amount, $currencyCode) = $this->parseRawData();
+		try {
+			/** @var float|NULL $amount */
+			/** @var string|NULL $currencyCode */
+			list ($amount, $currencyCode) = $this->parseRawData();
 
-		if ($amount === NULL || $currencyCode === NULL) {
+			if ($amount === NULL || $currencyCode === NULL) {
+				return NULL;
+			}
+		} catch (ValueParseException $e) {
 			return NULL;
 		}
 
