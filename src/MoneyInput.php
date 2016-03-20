@@ -46,9 +46,14 @@ class MoneyInput extends TextInput
 	private $currencyFinder;
 
 	/**
-	 * @var string[]
+	 * @var Html
 	 */
-	private $currencyCodeOptions;
+	private $amountControl;
+
+	/**
+	 * @var Html
+	 */
+	private $currencyControl;
 
 
 
@@ -67,7 +72,9 @@ class MoneyInput extends TextInput
 		parent::__construct($label, $maxLength);
 
 		$this->currencyFinder = $currencyFinder;
-		$this->currencyCodeOptions = $currencyCodeOptions;
+
+		$this->amountControl = Html::el('input');
+		$this->currencyControl = Helpers::createSelectBox($currencyCodeOptions, ['selected?' => $this->rawCurrencyCode]);
 
 		$this->addRule(Form::VALID, 'moneyInput.error.notANumber');
 	}
@@ -91,15 +98,30 @@ class MoneyInput extends TextInput
 	{
 		$name = $this->getHtmlName();
 
+		$amountControl = clone $this->amountControl;
+		$currencyControl = clone $this->currencyControl;
+
+		$amountControl
+			->name($name . '[amount]')
+			->id($this->getHtmlId())
+			->value($this->rawAmount)
+			->class(self::CLASS_IDENTIFIER);
+
+		$currencyControl->name($name . '[currencyCode]');
+
 		return Html::el()
-			->add(Html::el('input')
-				->name($name . '[amount]')
-				->id($this->getHtmlId())
-				->value($this->rawAmount)
-				->class(self::CLASS_IDENTIFIER)
-			)
-			->add(Helpers::createSelectBox($this->currencyCodeOptions, ['selected?' => $this->rawCurrencyCode])
-				->name($name . '[currencyCode]'));
+			->add($amountControl)
+			->add($currencyControl);
+	}
+
+
+
+	/**
+	 * @inheritdoc
+	 */
+	public function getControlPrototype()
+	{
+		return $this->amountControl;
 	}
 
 
