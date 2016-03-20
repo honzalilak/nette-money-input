@@ -40,10 +40,10 @@ class MoneyInputTest extends TestCase
 		$input = $this->moneyInputBuilder();
 		$form['money'] = $input;
 
-		$expected = '<div class="row"><div class="col-sm-9">'
+		$expected = '<div class="row moneyInputControlContainer"><div class="col-sm-9 moneyInputAmountContainer">'
 			. '<input name="money[amount]" id="frm-money" value="" class="money-input form-control">'
-			. '</div><div class="col-sm-3">'
-			. '<select name="money[currencyCode]"><option value="CZK">CZK</option></select>'
+			. '</div><div class="col-sm-3 moneyInputCurrencyContainer">'
+			. '<select name="money[currencyCode]" class="form-control"><option value="CZK">CZK</option></select>'
 			. '</div></div>';
 
 		Assert::equal($expected, (string) $input->getControl());
