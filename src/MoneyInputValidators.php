@@ -110,7 +110,7 @@ class MoneyInputValidators extends Object
 	/**
 	 * @param float[]|NULL[] $args
 	 */
-	public static function validateRangeArgs(array $args)
+	private static function validateRangeArgs(array $args)
 	{
 		if (count($args) !== 2) {
 			throw new InvalidArgumentException('You have to provide exactly two values.');

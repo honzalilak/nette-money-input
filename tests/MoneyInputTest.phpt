@@ -18,6 +18,7 @@ use Mockery\MockInterface;
 use Nette\Forms\Form;
 use Nette\Forms\IControl;
 use Nette\InvalidArgumentException;
+use Nette\Utils\Html;
 use ReflectionObject;
 use Tester\Assert;
 use Tester\TestCase;
@@ -31,6 +32,15 @@ class MoneyInputTest extends TestCase
 
 	const HAS_ERRORS = TRUE;
 	const NO_ERRORS = FALSE;
+
+
+
+	public function testControlPrototypesInitialized()
+	{
+		$input = $this->moneyInputBuilder();
+		Assert::type(Html::class, $input->getAmountControlPrototype());
+		Assert::type(Html::class, $input->getCurrencyControlPrototype());
+	}
 
 
 

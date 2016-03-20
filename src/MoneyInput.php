@@ -93,6 +93,7 @@ class MoneyInput extends TextInput
 
 	/**
 	 * @inheritdoc
+	 * @return Html
 	 */
 	public function getControl()
 	{

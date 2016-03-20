@@ -6,10 +6,10 @@
 
 # Disclaimer
 As support for multi-control inputs in Nette is not really rich, this component have some limitations:
-* There is hardcoded rendering for Bootstrap3, you are not force to use it, but the structure of elements and classes attached to it are hardcoded. If you wand to use your own "skin" you can use:
+* There is hardcoded rendering for Bootstrap3, you are not force to use it, but the structure of elements and classes attached to it are hardcoded. If you want to use your own "skin" you can use:
  * Methods `getAmountControlPrototype()` and `getCurrencyControlPrototype()` to reach input and select elements.
  * CSS classes `moneyInputControlContainer`, `moneyInputAmountContainer` and `moneyInputCurrencyContainer` to adjust placement of inputs.
-* There is also limitation in `addRule()` there is support for:
+* There is also limitation in `addRule()` there is support only for:
  * `Form::FILLED` and `Form::REQUIRED` - You can also use `setRequired()`.
  * and `Form::RANGE` - But there is no support for currencies. Its recommended to use it for positive / negative limitation only.
 
