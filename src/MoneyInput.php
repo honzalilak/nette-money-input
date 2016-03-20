@@ -107,16 +107,18 @@ class MoneyInput extends TextInput
 			->value($this->rawAmount)
 			->class(self::CLASS_IDENTIFIER . ' form-control');
 
-		$currencyControl->name($name . '[currencyCode]');
+		$currencyControl
+			->name($name . '[currencyCode]')
+			->class('form-control');
 
 		return Html::el('div')
 			->add(
-				Html::el('div')->add($amountControl)->class('col-sm-9')
+				Html::el('div')->add($amountControl)->class('col-sm-9 moneyInputAmountContainer')
 			)
 			->add(
-				Html::el('div')->add($currencyControl)->class('col-sm-3')
+				Html::el('div')->add($currencyControl)->class('col-sm-3 moneyInputCurrencyContainer')
 			)
-			->class('row');
+			->class('row moneyInputControlContainer');
 	}
 
 
@@ -282,6 +284,26 @@ class MoneyInput extends TextInput
 		$currencyCode = $this->rawCurrencyCode !== '' ? $this->rawCurrencyCode : NULL;
 
 		return [$amount, $currencyCode];
+	}
+
+
+
+	/**
+	 * @return Html
+	 */
+	public function getAmountControlPrototype()
+	{
+		return $this->amountControl;
+	}
+
+
+
+	/**
+	 * @return Html
+	 */
+	public function getCurrencyControlPrototype()
+	{
+		return $this->currencyControl;
 	}
 
 }
