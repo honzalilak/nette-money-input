@@ -127,6 +127,8 @@ class MoneyInput extends TextInput
 			$this->rawAmount = '';
 			$this->rawCurrencyCode = '';
 		}
+
+		return $this;
 	}
 
 
