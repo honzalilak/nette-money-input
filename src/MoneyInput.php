@@ -272,7 +272,7 @@ class MoneyInput extends TextInput
 
 			$amount = (float) $this->rawAmount;
 		} else {
-			$amount = NULL;
+			$amount = 0;
 		}
 
 		$currencyCode = $this->rawCurrencyCode !== '' ? $this->rawCurrencyCode : NULL;

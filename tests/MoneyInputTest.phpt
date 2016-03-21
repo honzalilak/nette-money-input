@@ -263,7 +263,7 @@ class MoneyInputTest extends TestCase
 			[100000000, 'CZK', '100 000 000', 'CZK'],
 			[0, 'CZK', '0', 'CZK'],
 
-			[NULL, NULL, '', 'CZK'],
+			[0, 'CZK', '', 'CZK'],
 			[NULL, NULL, ' - - - ', '  oi! '],
 		];
 	}
