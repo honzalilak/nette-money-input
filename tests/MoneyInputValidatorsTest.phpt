@@ -8,13 +8,9 @@ namespace Achse\MoneyInput\Tests;
 
 require __DIR__ . '/bootstrap.php';
 
-use Achse\MoneyInput\ICurrencyFinder;
-use Achse\MoneyInput\MoneyInput;
 use Achse\MoneyInput\MoneyInputValidators;
-use Kdyby\Money\Currency;
 use Mockery;
 use Mockery\MockInterface;
-use Nette\Forms\Form;
 use Nette\Forms\IControl;
 use Nette\InvalidArgumentException;
 use Tester\Assert;
@@ -25,7 +21,18 @@ use Tester\TestCase;
 class MoneyInputValidatorsTest extends TestCase
 {
 
-	const DUMMY_CURRENCY_OPTIONS = ['CZK' => 'CZK'];
+	/**
+	 * @var MoneyInputMocker
+	 */
+	private $mocker;
+
+
+
+	public function __construct()
+	{
+		$this->mocker = new MoneyInputMocker();
+	}
+
 
 
 	/**
@@ -37,7 +44,7 @@ class MoneyInputValidatorsTest extends TestCase
 	 */
 	public function testValidateMoneyInputValid($expected, $rawAmount, $rawCurrency)
 	{
-		$input = $this->getInputWithMockedUserInput($rawAmount, $rawCurrency);
+		$input = $this->mocker->getInputWithMockedUserInput($rawAmount, $rawCurrency);
 		$input->loadHttpData();
 
 		Assert::equal($expected, MoneyInputValidators::validateMoneyInputFilled($input));
@@ -79,60 +86,6 @@ class MoneyInputValidatorsTest extends TestCase
 		Assert::exception(function () use ($control) {
 			MoneyInputValidators::validateMoneyInputRange($control, []);
 		}, InvalidArgumentException::class);
-	}
-
-
-
-	/**
-	 * @return ICurrencyFinder|MockInterface
-	 */
-	private function mockCurrencyFinder()
-	{
-		return Mockery::mock(ICurrencyFinder::class)
-			->shouldReceive('findByCode')->andReturnUsing(
-				function ($code) {
-					return Currency::get($code);
-				}
-			)->getMock();
-	}
-
-
-
-	/**
-	 * @return MoneyInput
-	 */
-	private function moneyInputBuilder()
-	{
-		$input = new MoneyInput(
-			'caption',
-			MoneyInput::AMOUNT_LENGTH_LIMIT,
-			self::DUMMY_CURRENCY_OPTIONS,
-			$this->mockCurrencyFinder()
-		);
-
-		return $input;
-	}
-
-
-
-	/**
-	 * @param string $rawAmount
-	 * @param string $rawCurrency
-	 * @return MoneyInput
-	 */
-	private function getInputWithMockedUserInput($rawAmount, $rawCurrency)
-	{
-		/** @var Form|MockInterface $form */
-		$form = Mockery::mock(new Form());
-		$form->shouldReceive('getHttpData')
-			->with(Form::DATA_LINE, 'money[amount]')->andReturn($rawAmount);
-		$form->shouldReceive('getHttpData')
-			->with(Form::DATA_LINE, 'money[currencyCode]')->andReturn($rawCurrency)->getMock();
-
-		$input = $this->moneyInputBuilder();
-		$input->setParent($form, 'money');
-
-		return $input;
 	}
 
 }

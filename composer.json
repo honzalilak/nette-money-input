@@ -31,5 +31,10 @@
 		"classmap": [
 			"src/exceptions.php"
 		]
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Achse\\MoneyInput\\Tests\\": "tests/"
+		}
 	}
 }
