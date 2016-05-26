@@ -10,13 +10,11 @@ require __DIR__ . '/bootstrap.php';
 
 use Achse\MoneyInput\ICurrencyFinder;
 use Achse\MoneyInput\MoneyInput;
-use Achse\MoneyInput\MoneyInputValidators;
 use Kdyby\Money\Currency;
 use Kdyby\Money\Money;
 use Mockery;
 use Mockery\MockInterface;
 use Nette\Forms\Form;
-use Nette\Forms\IControl;
 use Nette\InvalidArgumentException;
 use Nette\Utils\Html;
 use ReflectionObject;
@@ -290,26 +288,6 @@ class MoneyInputTest extends TestCase
 
 		Assert::notSame($currency, $input->getValue());
 		$this->assertMoney($amount, $input->getValue());
-	}
-
-
-
-	public function testTypeValidation()
-	{
-		/** @var IControl|MockInterface $control */
-		$control = Mockery::mock(IControl::class);
-
-		Assert::exception(function () use ($control) {
-			MoneyInputValidators::validateMoneyInputFilled($control);
-		}, InvalidArgumentException::class);
-
-		Assert::exception(function () use ($control) {
-			MoneyInputValidators::validateMoneyInputValid($control);
-		}, InvalidArgumentException::class);
-
-		Assert::exception(function () use ($control) {
-			MoneyInputValidators::validateMoneyInputRange($control, []);
-		}, InvalidArgumentException::class);
 	}
 
 

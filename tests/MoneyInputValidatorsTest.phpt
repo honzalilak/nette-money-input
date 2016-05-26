@@ -11,9 +11,12 @@ require __DIR__ . '/bootstrap.php';
 use Achse\MoneyInput\ICurrencyFinder;
 use Achse\MoneyInput\MoneyInput;
 use Achse\MoneyInput\MoneyInputValidators;
+use Kdyby\Money\Currency;
 use Mockery;
 use Mockery\MockInterface;
 use Nette\Forms\Form;
+use Nette\Forms\IControl;
+use Nette\InvalidArgumentException;
 use Tester\Assert;
 use Tester\TestCase;
 
@@ -56,6 +59,26 @@ class MoneyInputValidatorsTest extends TestCase
 			[TRUE, '100', 'CZK'],
 			[TRUE, 'Trololoooo-oo-o-ooo', 'CZK'],
 		];
+	}
+
+
+
+	public function testTypeValidation()
+	{
+		/** @var IControl|MockInterface $control */
+		$control = Mockery::mock(IControl::class);
+
+		Assert::exception(function () use ($control) {
+			MoneyInputValidators::validateMoneyInputFilled($control);
+		}, InvalidArgumentException::class);
+
+		Assert::exception(function () use ($control) {
+			MoneyInputValidators::validateMoneyInputValid($control);
+		}, InvalidArgumentException::class);
+
+		Assert::exception(function () use ($control) {
+			MoneyInputValidators::validateMoneyInputRange($control, []);
+		}, InvalidArgumentException::class);
 	}
 
 
