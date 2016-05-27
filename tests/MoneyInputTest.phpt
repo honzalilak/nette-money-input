@@ -8,18 +8,12 @@ namespace Achse\MoneyInput\Tests;
 
 require __DIR__ . '/bootstrap.php';
 
-use Achse\MoneyInput\ICurrencyFinder;
-use Achse\MoneyInput\MoneyInput;
-use Achse\MoneyInput\MoneyInputValidators;
 use Kdyby\Money\Currency;
 use Kdyby\Money\Money;
 use Mockery;
-use Mockery\MockInterface;
 use Nette\Forms\Form;
-use Nette\Forms\IControl;
 use Nette\InvalidArgumentException;
 use Nette\Utils\Html;
-use ReflectionObject;
 use Tester\Assert;
 use Tester\TestCase;
 
@@ -28,16 +22,26 @@ use Tester\TestCase;
 class MoneyInputTest extends TestCase
 {
 
-	const DUMMY_CURRENCY_OPTIONS = ['CZK' => 'CZK'];
-
 	const HAS_ERRORS = TRUE;
 	const NO_ERRORS = FALSE;
+
+	/**
+	 * @var MoneyInputMocker
+	 */
+	private $mocker;
+
+
+
+	public function __construct()
+	{
+		$this->mocker = new MoneyInputMocker();
+	}
 
 
 
 	public function testControlPrototypesInitialized()
 	{
-		$input = $this->moneyInputBuilder();
+		$input = $this->mocker->moneyInputBuilder();
 		Assert::type(Html::class, $input->getAmountControlPrototype());
 		Assert::type(Html::class, $input->getCurrencyControlPrototype());
 	}
@@ -47,7 +51,7 @@ class MoneyInputTest extends TestCase
 	public function testGetControl()
 	{
 		$form = new Form();
-		$input = $this->moneyInputBuilder();
+		$input = $this->mocker->moneyInputBuilder();
 		$form['money'] = $input;
 
 		$expected = '<div class="row moneyInputControlContainer"><div class="col-sm-9 moneyInputAmountContainer">'
@@ -70,7 +74,7 @@ class MoneyInputTest extends TestCase
 	 */
 	public function testIsEmpty($expected, $rawAmount, $rawCurrency)
 	{
-		$input = $this->getInputWithMockedUserInput($rawAmount, $rawCurrency);
+		$input = $this->mocker->getInputWithMockedUserInput($rawAmount, $rawCurrency);
 		$input->loadHttpData();
 
 		Assert::equal($expected, $input->isEmpty());
@@ -105,16 +109,16 @@ class MoneyInputTest extends TestCase
 	 */
 	public function testLoadHttpData($expectedAmount, $expectedCurrencyCode, $rawAmount, $rawCurrency)
 	{
-		$input = $this->getInputWithMockedUserInput($rawAmount, $rawCurrency);
+		$input = $this->mocker->getInputWithMockedUserInput($rawAmount, $rawCurrency);
 
 		$input->loadHttpData();
 
 		/** @var float $amountInnerValue */
-		$amountInnerValue = $this->getInnerInputValue($input, 'rawAmount');
+		$amountInnerValue = $this->mocker->getInnerInputValue($input, 'rawAmount');
 		Assert::equal($expectedAmount, $amountInnerValue);
 
 		/** @var string $currencyCodeInnerValue */
-		$currencyCodeInnerValue = $this->getInnerInputValue($input, 'rawCurrencyCode');
+		$currencyCodeInnerValue = $this->mocker->getInnerInputValue($input, 'rawCurrencyCode');
 		Assert::equal($expectedCurrencyCode, $currencyCodeInnerValue);
 	}
 
@@ -129,7 +133,7 @@ class MoneyInputTest extends TestCase
 	 */
 	public function testValidate($expectedHasErrors, $rawAmount, $rawCurrency)
 	{
-		$input = $this->getInputWithMockedUserInput($rawAmount, $rawCurrency);
+		$input = $this->mocker->getInputWithMockedUserInput($rawAmount, $rawCurrency);
 
 		$input->setRequired('Filed is required.');
 		$input->loadHttpData();
@@ -169,7 +173,7 @@ class MoneyInputTest extends TestCase
 	 */
 	public function testValidateRange($expectedHasErrors, $rawAmount, $rawCurrency, $left, $right)
 	{
-		$input = $this->getInputWithMockedUserInput($rawAmount, $rawCurrency);
+		$input = $this->mocker->getInputWithMockedUserInput($rawAmount, $rawCurrency);
 
 		$input->addRule(Form::RANGE, 'bla-bla', [$left, $right]);
 		$input->loadHttpData();
@@ -219,7 +223,7 @@ class MoneyInputTest extends TestCase
 
 	public function testIsFilled()
 	{
-		$input = $this->moneyInputBuilder();
+		$input = $this->mocker->moneyInputBuilder();
 		Assert::false($input->isFilled());
 		$input->setValue('');
 		Assert::false($input->isFilled());
@@ -241,14 +245,14 @@ class MoneyInputTest extends TestCase
 	 */
 	public function testGetValues($expectedAmount, $expectedCurrency, $rawAmount, $rawCurrency)
 	{
-		$input = $this->getInputWithMockedUserInput($rawAmount, $rawCurrency);
+		$input = $this->mocker->getInputWithMockedUserInput($rawAmount, $rawCurrency);
 		$input->loadHttpData();
 		$result = $input->getValue();
 
 		if ($expectedAmount === NULL || $expectedCurrency === NULL) {
 			Assert::null($result);
 		} else {
-			$this->assertMoney(Money::fromFloat($expectedAmount, Currency::get($expectedCurrency)), $result);
+			MoneyAssertions::assertMoney(Money::fromFloat($expectedAmount, Currency::get($expectedCurrency)), $result);
 		}
 	}
 
@@ -274,7 +278,7 @@ class MoneyInputTest extends TestCase
 	{
 		$currency = new Currency('CZK');
 
-		$input = $this->moneyInputBuilder();
+		$input = $this->mocker->moneyInputBuilder();
 
 		Assert::exception(
 			function () use ($input) {
@@ -285,113 +289,11 @@ class MoneyInputTest extends TestCase
 		);
 
 		$amount = Money::fromFloat(100, $currency);
-		$input = $this->moneyInputBuilder();
+		$input = $this->mocker->moneyInputBuilder();
 		$input->setDefaultValue($amount);
 
 		Assert::notSame($currency, $input->getValue());
-		$this->assertMoney($amount, $input->getValue());
-	}
-
-
-
-	public function testTypeValidation()
-	{
-		/** @var IControl|MockInterface $control */
-		$control = Mockery::mock(IControl::class);
-
-		Assert::exception(function () use ($control) {
-			MoneyInputValidators::validateMoneyInputFilled($control);
-		}, InvalidArgumentException::class);
-
-		Assert::exception(function () use ($control) {
-			MoneyInputValidators::validateMoneyInputValid($control);
-		}, InvalidArgumentException::class);
-
-		Assert::exception(function () use ($control) {
-			MoneyInputValidators::validateMoneyInputRange($control, []);
-		}, InvalidArgumentException::class);
-	}
-
-
-
-	/**
-	 * @param Money $expected
-	 * @param Money $given
-	 */
-	private function assertMoney(Money $expected, Money $given)
-	{
-		Assert::equal($expected->toFloat(), $given->toFloat());
-		Assert::equal($expected->getCurrency()->getCode(), $given->getCurrency()->getCode());
-	}
-
-
-
-	/**
-	 * @return ICurrencyFinder|MockInterface
-	 */
-	private function mockCurrencyFinder()
-	{
-		return Mockery::mock(ICurrencyFinder::class)
-			->shouldReceive('findByCode')->andReturnUsing(
-				function ($code) {
-					return Currency::get($code);
-				}
-			)->getMock();
-	}
-
-
-
-	/**
-	 * @return MoneyInput
-	 */
-	private function moneyInputBuilder()
-	{
-		$input = new MoneyInput(
-			'caption',
-			MoneyInput::AMOUNT_LENGTH_LIMIT,
-			self::DUMMY_CURRENCY_OPTIONS,
-			$this->mockCurrencyFinder()
-		);
-
-		return $input;
-	}
-
-
-
-	/**
-	 * @param MoneyInput $input
-	 * @param string $propertyName
-	 * @return mixed
-	 */
-	private function getInnerInputValue(MoneyInput $input, $propertyName)
-	{
-		$reflection = new ReflectionObject($input);
-		$property = $reflection->getProperty($propertyName);
-		$property->setAccessible(TRUE);
-
-		return $property->getValue($input);
-	}
-
-
-
-	/**
-	 * @param string $rawAmount
-	 * @param string $rawCurrency
-	 * @return MoneyInput
-	 */
-	private function getInputWithMockedUserInput($rawAmount, $rawCurrency)
-	{
-		/** @var Form|MockInterface $form */
-		$form = Mockery::mock(new Form());
-		$form->shouldReceive('getHttpData')
-			->with(Form::DATA_LINE, 'money[amount]')->andReturn($rawAmount);
-		$form->shouldReceive('getHttpData')
-			->with(Form::DATA_LINE, 'money[currencyCode]')->andReturn($rawCurrency)->getMock();
-
-		$input = $this->moneyInputBuilder();
-		$input->setParent($form, 'money');
-
-		return $input;
+		MoneyAssertions::assertMoney($amount, $input->getValue());
 	}
 
 }

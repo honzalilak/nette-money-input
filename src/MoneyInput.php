@@ -129,7 +129,7 @@ class MoneyInput extends TextInput
 	 */
 	public function isFilled()
 	{
-		return !$this->isEmpty();
+		return $this->rawAmount !== '' && $this->rawCurrencyCode !== '';
 	}
 
 

@@ -35,7 +35,7 @@ class MoneyInputValidators extends Object
 		/** @var MoneyInput $control */
 		self::validateControlType($control);
 
-		return !$control->isEmpty();
+		return $control->isFilled();
 	}
 
 
