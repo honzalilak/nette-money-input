@@ -24,6 +24,9 @@ class MoneyInputMocker
 
 
 
+	/**
+	 * @param string[] $currencyOptions
+	 */
 	public function __construct($currencyOptions = self::DUMMY_CURRENCY_OPTIONS)
 	{
 		$this->currencyOptions = $currencyOptions;
