@@ -28,7 +28,7 @@ npm install jquery
 ```
 
 If you are using webloader:
-```neon
+```yaml
 webloader:
 	js:
 		default:
