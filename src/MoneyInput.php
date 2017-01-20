@@ -113,11 +113,11 @@ class MoneyInput extends TextInput
 			->class('form-control');
 
 		return Html::el('div')
-			->add(
-				Html::el('div')->add($amountControl)->class('col-sm-9 moneyInputAmountContainer')
+			->addHtml(
+				Html::el('div')->addHtml($amountControl)->class('col-sm-9 moneyInputAmountContainer')
 			)
-			->add(
-				Html::el('div')->add($currencyControl)->class('col-sm-3 moneyInputCurrencyContainer')
+			->addHtml(
+				Html::el('div')->addHtml($currencyControl)->class('col-sm-3 moneyInputCurrencyContainer')
 			)
 			->class('row moneyInputControlContainer');
 	}
